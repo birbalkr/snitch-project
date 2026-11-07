@@ -50,3 +50,43 @@ export async function authRegister(req, res) {
         }
     })
 }
+
+export async function authlogin(req, res) {
+    const { email, password } = req.body
+
+    const user = await userModel.findOne({ email })
+
+    if (!user) {
+        return res.status(400).json({
+            message: "Invlid Email and Password"
+        })
+    }
+
+    const isPasswordvalid = await bcrypt.compare(password, user.password)
+
+    if (!isPasswordvalid) {
+        return res.status(400).json({
+            message: "Invalid Email and Password",
+        })
+    }
+
+    const { accessToken, refreshToken } = userToken({ userId: user._id, role: user.role });
+
+    res.cookie("refreshToken", refreshToken, { httpOnly: true })
+    await userModel.findOneAndUpdate({ email }, { refreshToken })
+
+    res.status(200).json({
+        message: "Login SuccessFully ....",
+        data: {
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email
+            },
+            accessToken
+        }
+    })
+
+
+    res
+}
