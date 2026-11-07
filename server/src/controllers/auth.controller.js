@@ -1,5 +1,7 @@
 import userModel from "../models/user.model.js"
 import bcrypt from 'bcryptjs'
+import { userToken } from "../utils/auth.utils.js"
+
 
 
 
@@ -21,9 +23,30 @@ export async function authRegister(req, res) {
         })
     }
 
-    const userCreate = await userModel.create({
+    const user = await userModel.create({
         name,
         email,
         password: await bcrypt.hash(password, 12)
+    })
+
+    const { accessToken, refreshToken } = userToken({ userId: user._id, role: user.role })
+
+
+    res.cookie("refreshToken", refreshToken, {
+        httpOnly: true
+    })
+
+    await userModel.findByIdAndUpdate(user._id, { refreshToken })
+
+    res.status(200).json({
+        message: "user create successfully",
+        data: {
+            user: {
+                email: user.email,
+                name: user.name,
+                id: user._id
+            },
+            accessToken
+        }
     })
 }
