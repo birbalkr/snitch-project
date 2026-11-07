@@ -1,6 +1,6 @@
 import userModel from "../models/user.model.js"
 import bcrypt from 'bcryptjs'
-import { userToken } from "../utils/auth.utils.js"
+import { readRefreshToken, userToken } from "../utils/auth.utils.js"
 
 
 
@@ -89,4 +89,69 @@ export async function authlogin(req, res) {
 
 
     res
+}
+
+
+export async function authrefreshToken(req, res) {
+    const newrefreshToken = req.cookies.refreshToken;
+
+
+    if (!newrefreshToken) {
+        return res.status(401).json({
+            message: "Refresh token is required."
+        })
+    }
+
+    try {
+        console.log("try");
+
+        const decode = readRefreshToken(newrefreshToken)
+        console.log("decode", decode);
+
+
+        const { userId } = decode
+
+        const user = await userModel.findById(userId)
+
+        if (newrefreshToken != user.refreshToken) {
+
+            await userModel.findByIdAndUpdate(user._id,
+                {
+                    refreshToken: null,
+                    // isAccountFreeze: true
+                })
+
+            return res.status(401).json({
+                message: "Refresh token mismatch"
+            })
+        }
+
+        const { accessToken, refreshToken } = userToken({ userId: user._id, role: user.role })
+        await userModel.findByIdAndUpdate(user._id, { refreshToken })
+
+
+        res.cookie("refreshToken", refreshToken, { httpOnly: true })
+
+
+
+        res.status(200).json({
+            message: "refreshToken change successfully...... ",
+            data: {
+                user: {
+                    id: user._id,
+                    name: user.name,
+                    email: user.email,
+                },
+                accessToken,
+            }
+        })
+
+
+    } catch (error) {
+        console.log("catch");
+        return res.status(401).json({
+            message: "invalid refresh Token"
+
+        })
+    }
 }

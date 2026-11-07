@@ -15,18 +15,7 @@ export function userToken({ userId, role }) {
     return { accessToken, refreshToken };
 }
 
-export function createAccessToken({ userId, role }) {
-    const accessToken = jwt.sign({
-        userId, role
-    }, config.ACCESS_TOKEN, { expiresIn: '15Min' })
-
-    return accessToken;
-}
-
-export function createRefreshToken({ userId, role }) {
-    const refreshToken = jwt.sign({
-        userId, role
-    }, config.REFRESH_TOKEN, { expiresIn: "7Days" })
-
-    return refreshToken
+export function readRefreshToken(refreshToken) {
+    return jwt.verify(refreshToken, config.REFRESH_TOKEN)
+    
 }
