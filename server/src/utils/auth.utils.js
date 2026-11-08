@@ -17,5 +17,10 @@ export function userToken({ userId, role }) {
 
 export function readRefreshToken(refreshToken) {
     return jwt.verify(refreshToken, config.REFRESH_TOKEN)
-    
+
+}
+
+
+export function readAccessToken(accessToken) {
+    return jwt.verify(accessToken, config.ACCESS_TOKEN)
 }
