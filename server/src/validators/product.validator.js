@@ -34,7 +34,6 @@ export const productValidator = [
                 error: error.array()
             })
         }
-
         next()
     }
 
